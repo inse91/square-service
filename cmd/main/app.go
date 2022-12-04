@@ -1,58 +1,36 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/gin-gonic/gin"
-	"io"
-	"log"
-	"net"
-	"net/http"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
+	"square-service/internal/_handlers"
+	task "square-service/internal/_task"
 )
-
-//const initPath = `/square`
-
-func IndexHandler(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{
-		"hello": "world",
-	})
-}
-
-func HelloHandler(ctx *gin.Context) {
-	jsonData, err := io.ReadAll(ctx.Request.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	var obj any
-	err = json.Unmarshal(jsonData, &obj)
-	if err != nil {
-		panic(err)
-	}
-
-	ctx.String(http.StatusOK, "hello from server")
-	//ctx.JSON(http.StatusOK, gin.H{
-	//	"req": obj,
-	//})
-}
 
 func main() {
 
-	fmt.Println("Hello world")
+	echoRouter := echo.New()
 
-	router := gin.Default()
+	echoRouter.Use(middleware.Logger())
+	echoRouter.Use(middleware.Recover())
 
-	router.GET("/", IndexHandler)
-	router.POST("/hello", HelloHandler)
+	handler := task.NewHandler()
+	handler.Register(echoRouter)
 
-	listener, err := net.Listen("tcp", ":8080")
-	if err != nil {
-		panic(err)
-	}
+	echoRouter.GET("/:name", handlers.IndexHandler)
 
-	log.Fatal(router.RunListener(listener))
-	//log.Fatal(
-	//	router.Run(),
-	//)
+	log.Fatal(echoRouter.Start(":8080"))
+
+	//server := http.Server{
+	//	Addr:         ":8080",
+	//	Handler:      echoRouter,
+	//	ReadTimeout:  5 * time.Second,
+	//	WriteTimeout: 5 * time.Second,
+	//}
+	//
+	//server.Serve()
+	//
+	//log.Fatal(server.ListenAndServe())
 
 }

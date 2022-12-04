@@ -1,0 +1,35 @@
+GET http://localhost:8080/task/example
+#Content-Type: application/json
+Accept: application/json
+
+###
+GET http://localhost:8080/tasks
+#Content-Type: application/json
+Accept: text/plain
+
+> {%
+function t1() {
+
+    // client.assert(
+      // response.status === 200,
+      // String(response.status)
+      //      .concat(" is not 200")
+  // )
+}
+
+client.test("request", t1);
+%}
+
+###
+GET http://localhost:8080/{{name}}
+Accept: text/plain
+
+###
+POST http://localhost:8080/task
+Content-Type: application/json
+
+{
+  "key" : "value",
+  "list": [1, 2, 3, "123"]
+}
+

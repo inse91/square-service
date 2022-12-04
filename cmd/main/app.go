@@ -2,29 +2,44 @@ package main
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	mw "github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
+	"go.uber.org/zap"
 	"square-service/internal/_handlers"
 	task "square-service/internal/_task"
+	"square-service/pkg/logging"
 )
 
 func main() {
 
-	echoRouter := echo.New()
+	router := echo.New()
+	logger := logging.GetLogger()
 
-	echoRouter.Use(middleware.Logger())
-	echoRouter.Use(middleware.Recover())
+	router.Use(mw.RequestLoggerWithConfig(mw.RequestLoggerConfig{
+		LogURI:    true,
+		LogStatus: true,
+		LogMethod: true,
+		LogValuesFunc: func(ctx echo.Context, v mw.RequestLoggerValues) error {
+			//lgr, _ := logging.GetLogger()
+			logger.Info("",
+				zap.String("URI", ctx.Request().URL.String()),
+				zap.Int("status_code", ctx.Response().Status),
+				zap.String("method", ctx.Request().Method))
+			return nil
+		},
+	}))
+	router.Use(mw.Recover())
 
-	handler := task.NewHandler()
-	handler.Register(echoRouter)
+	handler := task.NewHandler(logger)
+	handler.Register(router)
 
-	echoRouter.GET("/:name", handlers.IndexHandler)
+	router.GET("/:name", handlers.IndexHandler)
 
-	log.Fatal(echoRouter.Start(":8080"))
+	log.Fatal(router.Start(":8080"))
 
 	//server := http.Server{
 	//	Addr:         ":8080",
-	//	Handler:      echoRouter,
+	//	Handler:      router,
 	//	ReadTimeout:  5 * time.Second,
 	//	WriteTimeout: 5 * time.Second,
 	//}

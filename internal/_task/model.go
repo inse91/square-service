@@ -14,7 +14,7 @@ func NewTask() *task {
 
 var exampleTask = task{
 	ID:          999,
-	Description: "this is _task example",
+	Description: "this is task example",
 	Tags:        []string{"example"},
 	Priority:    "low",
 }

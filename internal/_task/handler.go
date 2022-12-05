@@ -14,7 +14,6 @@ const (
 )
 
 type handler struct {
-	//log logging.Logger
 	logger *logging.Logger
 }
 

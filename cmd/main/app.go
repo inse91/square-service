@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"github.com/labstack/echo/v4"
 	mw "github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	"go.uber.org/zap"
 	"square-service/internal/_handlers"
 	task "square-service/internal/_task"
+	"square-service/internal/config"
 	"square-service/pkg/logging"
 )
 
@@ -14,6 +16,13 @@ func main() {
 
 	router := echo.New()
 	logger := logging.GetLogger()
+
+	cfg, err := config.GetConfig()
+	if err != nil {
+		logger.Fatal("error while loading config", zap.Error(err))
+	}
+
+	fmt.Println(cfg.Port)
 
 	router.Use(mw.RequestLoggerWithConfig(mw.RequestLoggerConfig{
 		LogURI:    true,

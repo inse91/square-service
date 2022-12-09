@@ -1,14 +1,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	mw "github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	"go.uber.org/zap"
-	"square-service/internal/_handlers"
-	task "square-service/internal/_task"
 	"square-service/internal/config"
+	"square-service/internal/handlers"
+	task "square-service/internal/task"
+	"square-service/pkg/database"
 	"square-service/pkg/logging"
 )
 
@@ -16,13 +18,18 @@ func main() {
 
 	router := echo.New()
 	logger := logging.GetLogger()
-
 	cfg, err := config.GetConfig()
 	if err != nil {
 		logger.Fatal("error while loading config", zap.Error(err))
 	}
 
-	fmt.Println(cfg.Port)
+	mongoDB, err := database.NewMongoClient(context.Background(), "")
+	if err != nil {
+		return
+	}
+
+	task.NewStorage(mongoDB, "tasks", logger)
+	//storage.Create()
 
 	router.Use(mw.RequestLoggerWithConfig(mw.RequestLoggerConfig{
 		LogURI:    true,
@@ -44,7 +51,8 @@ func main() {
 
 	router.GET("/:name", handlers.IndexHandler)
 
-	log.Fatal(router.Start(":8080"))
+	address := fmt.Sprintf(":%s", cfg.Port)
+	log.Fatal(router.Start(address))
 
 	//server := http.Server{
 	//	Addr:         ":8080",

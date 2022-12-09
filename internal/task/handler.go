@@ -4,22 +4,22 @@ import (
 	"github.com/labstack/echo/v4"
 	"io"
 	"net/http"
-	handlers "square-service/internal/_handlers"
+	handlers "square-service/internal/handlers"
 	"square-service/pkg/logging"
 )
 
 const (
-	taskExampleURL string = "/task/example"
-	taskCreateURL  string = "/task"
+	taskExampleURL string = "/Task/example"
+	taskCreateURL  string = "/Task"
 )
 
 type handler struct {
 	logger *logging.Logger
 }
 
-func NewHandler(log *logging.Logger) handlers.Handler {
+func NewHandler(logger *logging.Logger) handlers.Handler {
 	return &handler{
-		logger: log,
+		logger: logger,
 	}
 }
 
@@ -30,17 +30,17 @@ func (h *handler) Register(r *echo.Echo) {
 }
 
 func (h *handler) CreateTask(ctx echo.Context) error {
-	h.logger.Info("task creation")
+	h.logger.Info("Task creation")
 	bytes, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {
 		return http.ErrBodyNotAllowed
 	}
 
-	return ctx.String(http.StatusOK, "task created "+string(bytes))
+	return ctx.String(http.StatusOK, "Task created "+string(bytes))
 }
 
 func (h *handler) GetTaskList(ctx echo.Context) error {
-	ctx.Set("Content-Type", "123")
+
 	err := ctx.String(
 		http.StatusOK,
 		"list of tasks",

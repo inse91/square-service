@@ -1,1 +1,6 @@
 port: 8081
+mongodb:
+  collection_name: "tasks"
+mongo-port: 4458
+mongo-login: "mongoadmin"
+mongo-password: "mongoadmin"

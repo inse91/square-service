@@ -21,6 +21,7 @@ func GetLogger() *Logger {
 			//zap.ErrorOutput(someFile),
 			zap.Development(),
 			zap.AddCaller(),
+			zap.AddStacktrace(zap.InfoLevel),
 		)
 	})
 

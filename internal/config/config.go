@@ -6,7 +6,10 @@ import (
 )
 
 type config struct {
-	Port int `yaml:"port"`
+	Port    string `yaml:"port"`
+	MongoDB struct {
+		CollectionName string `yaml:"collection_name"`
+	} `yaml:"mongodb"`
 }
 
 var cfg *config = &config{}

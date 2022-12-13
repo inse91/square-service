@@ -35,10 +35,16 @@ func (m *mongoDB) Create(ctx context.Context, task Task) (string, error) {
 }
 
 func (m *mongoDB) FindAll(ctx context.Context) ([]*Task, error) {
-	// TODO implement
-	//errors.As()
-	//errors.Is()
-	return nil, nil
+
+	res, err := m.collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	var tasks []*Task
+	if err = res.All(ctx, &tasks); err != nil {
+		return nil, err
+	}
+	return tasks, nil
 }
 
 func (m *mongoDB) FindTask(ctx context.Context, id string) (*Task, error) {
@@ -52,7 +58,7 @@ func (m *mongoDB) FindTask(ctx context.Context, id string) (*Task, error) {
 		return nil, err
 	}
 
-	filter := bson.M{"__id": objectID}
+	filter := bson.M{"_id": objectID}
 	singleResult := m.collection.FindOne(ctx, filter)
 	if err = singleResult.Err(); err != nil {
 		m.logger.Error("failed to get elem from collection", zap.Error(err))
@@ -60,7 +66,7 @@ func (m *mongoDB) FindTask(ctx context.Context, id string) (*Task, error) {
 	}
 
 	var task *Task
-	if err = singleResult.Decode(task); err != nil {
+	if err = singleResult.Decode(&task); err != nil {
 		m.logger.Error("failed to decode", zap.Error(err))
 		return nil, err
 	}
@@ -77,7 +83,7 @@ func (m *mongoDB) UpdateTask(ctx context.Context, task Task) (err error) {
 		return
 	}
 
-	filter := bson.M{"__id": objectID}
+	filter := bson.M{"_id": objectID}
 	taskBytes, err := bson.Marshal(task)
 	if err != nil {
 		m.logger.Error("failed to marshall task", zap.Error(err))
@@ -85,13 +91,13 @@ func (m *mongoDB) UpdateTask(ctx context.Context, task Task) (err error) {
 	}
 
 	var updateTaskObj bson.M
-	err = bson.Unmarshal(taskBytes, updateTaskObj)
+	err = bson.Unmarshal(taskBytes, &updateTaskObj)
 	if err != nil {
 		m.logger.Error("failed to unmarshall task", zap.Error(err))
 		return
 	}
 
-	delete(updateTaskObj, "__id")
+	delete(updateTaskObj, "_id")
 	update := bson.M{"$set": updateTaskObj}
 
 	updateResult, err := m.collection.UpdateOne(ctx, filter, update)
@@ -106,8 +112,7 @@ func (m *mongoDB) UpdateTask(ctx context.Context, task Task) (err error) {
 	}
 
 	if updateResult.ModifiedCount == 0 {
-		m.logger.Info("fail to modify task", zap.String("id", task.ID))
-		return fmt.Errorf("fail to modify task with id %s", task.ID)
+		m.logger.Info("nothing to modify task", zap.String("id", task.ID))
 	}
 
 	m.logger.Info("update succeeded",
@@ -129,7 +134,7 @@ func (m *mongoDB) Delete(ctx context.Context, id string) (err error) {
 		return
 	}
 
-	filter := bson.M{"__id": objectID}
+	filter := bson.M{"_id": objectID}
 	deleteResult, err := m.collection.DeleteOne(ctx, filter)
 	if err != nil {
 		m.logger.Error("failed to get elem from collection", zap.Error(err))
@@ -138,7 +143,7 @@ func (m *mongoDB) Delete(ctx context.Context, id string) (err error) {
 
 	if deleteResult.DeletedCount == 0 {
 		m.logger.Error("failed to find elem in collection")
-		return fmt.Errorf("find %d elems in collection")
+		return fmt.Errorf("find %d elems in collection", deleteResult.DeletedCount)
 	}
 
 	return

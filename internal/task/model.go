@@ -1,11 +1,11 @@
 package task
 
 type Task struct {
-	ID          string   `json:"id" bson:"__id,omitempty"`
+	ID          string   `json:"id" bson:"_id,omitempty"`
 	Description string   `json:"description" bson:"description"`
 	Tags        []string `json:"tags" bson:"tags"`
 	Priority    string   `json:"priority" bson:"priority"`
-	//DueDate     time.Time `json:"due"`
+	// TODO DueDate     time.Time `json:"due"`
 }
 
 type CreateTaskDTO struct {
@@ -19,8 +19,7 @@ func NewTask() *Task {
 }
 
 var exampleTask = Task{
-	ID:          "999",
-	Description: "this is Task example",
+	Description: "this is Task example2",
 	Tags:        []string{"example"},
 	Priority:    "low",
 }

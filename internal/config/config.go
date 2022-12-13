@@ -8,7 +8,12 @@ import (
 type config struct {
 	Port    string `yaml:"port"`
 	MongoDB struct {
-		CollectionName string `yaml:"collection_name"`
+		Host       string `yaml:"host"`
+		Port       string `yaml:"port"`
+		Login      string `yaml:"login"`
+		Password   string `yaml:"password"`
+		DataBase   string `yaml:"database"`
+		Collection string `yaml:"collection"`
 	} `yaml:"mongodb"`
 }
 

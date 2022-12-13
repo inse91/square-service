@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 	"square-service/internal/config"
 	"square-service/internal/handlers"
-	task "square-service/internal/task"
+	"square-service/internal/task"
 	"square-service/pkg/database"
 	"square-service/pkg/logging"
 )
@@ -23,13 +23,24 @@ func main() {
 		logger.Fatal("error while loading config", zap.Error(err))
 	}
 
-	mongoDB, err := database.NewMongoClient(context.Background(), "")
+	ctx := context.Background()
+
+	mongoDB, err := database.NewMongoClient(ctx, cfg.MongoDB.Host, cfg.MongoDB.Port, cfg.MongoDB.DataBase)
 	if err != nil {
+		logger.Fatal("", zap.Error(err))
 		return
 	}
 
-	task.NewStorage(mongoDB, "tasks", logger)
-	//storage.Create()
+	storage := task.NewStorage(mongoDB, cfg.MongoDB.Collection, logger)
+	newTask := task.GetExampleTask()
+	newTask.ID = "6398005157745d457e30e439"
+	err = storage.UpdateTask(ctx, *newTask)
+	if err != nil {
+		logger.Fatal("error updating task", zap.Error(err))
+		return
+	}
+
+	//fmt.Printf("%#v", *foundTask)
 
 	router.Use(mw.RequestLoggerWithConfig(mw.RequestLoggerConfig{
 		LogURI:    true,
@@ -53,16 +64,5 @@ func main() {
 
 	address := fmt.Sprintf(":%s", cfg.Port)
 	log.Fatal(router.Start(address))
-
-	//server := http.Server{
-	//	Addr:         ":8080",
-	//	Handler:      router,
-	//	ReadTimeout:  5 * time.Second,
-	//	WriteTimeout: 5 * time.Second,
-	//}
-	//
-	//server.Serve()
-	//
-	//log.Fatal(server.ListenAndServe())
 
 }

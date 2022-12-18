@@ -41,7 +41,8 @@ func (h *handler) CreateTask(ctx echo.Context) error {
 
 func (h *handler) GetTaskList(ctx echo.Context) error {
 
-	err := ctx.String(
+	//tasks, err = se
+	err := ctx.JSON(
 		http.StatusOK,
 		"list of tasks",
 	)

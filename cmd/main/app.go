@@ -32,15 +32,15 @@ func main() {
 	}
 
 	storage := task.NewStorage(mongoDB, cfg.MongoDB.Collection, logger)
-	newTask := task.GetExampleTask()
-	newTask.ID = "6398005157745d457e30e439"
-	err = storage.UpdateTask(ctx, *newTask)
+
+	var tasks []*task.Task
+	tasks, err = storage.FindAll(ctx)
 	if err != nil {
 		logger.Fatal("error updating task", zap.Error(err))
 		return
 	}
 
-	//fmt.Printf("%#v", *foundTask)
+	fmt.Printf("%#v", &tasks)
 
 	router.Use(mw.RequestLoggerWithConfig(mw.RequestLoggerConfig{
 		LogURI:    true,

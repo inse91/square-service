@@ -8,16 +8,20 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 	"square-service/pkg/logging"
+	"sync"
 )
 
 type mongoDB struct {
+	sync.Mutex
 	collection *mongo.Collection
 	logger     *logging.Logger
 }
 
 func (m *mongoDB) Create(ctx context.Context, task Task) (string, error) {
 
+	m.Lock()
 	res, err := m.collection.InsertOne(ctx, task)
+	m.Unlock()
 	if err != nil {
 		m.logger.Error("failed to insertOne", zap.Error(err))
 		return "", err
@@ -40,6 +44,7 @@ func (m *mongoDB) FindAll(ctx context.Context) ([]*Task, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var tasks []*Task
 	if err = res.All(ctx, &tasks); err != nil {
 		return nil, err
@@ -100,7 +105,9 @@ func (m *mongoDB) UpdateTask(ctx context.Context, task Task) (err error) {
 	delete(updateTaskObj, "_id")
 	update := bson.M{"$set": updateTaskObj}
 
+	m.Lock()
 	updateResult, err := m.collection.UpdateOne(ctx, filter, update)
+	m.Unlock()
 	if err != nil {
 		m.logger.Error("failed to update task", zap.Error(err))
 		return

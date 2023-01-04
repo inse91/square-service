@@ -17,8 +17,9 @@ type mongoDB struct {
 	logger     *logging.Logger
 }
 
-func (m *mongoDB) Create(ctx context.Context, task Task) (string, error) {
+func (m *mongoDB) Create(ctx context.Context, dto *CreateTaskDTO) (string, error) {
 
+	task := *dto
 	m.Lock()
 	res, err := m.collection.InsertOne(ctx, task)
 	m.Unlock()
@@ -49,6 +50,7 @@ func (m *mongoDB) FindAll(ctx context.Context) ([]*Task, error) {
 	if err = res.All(ctx, &tasks); err != nil {
 		return nil, err
 	}
+
 	return tasks, nil
 }
 

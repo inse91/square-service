@@ -28,14 +28,15 @@ func (m *mongoDB) Create(ctx context.Context, dto *CreateTaskDTO) (string, error
 		return "", err
 	}
 
-	if id, ok := res.InsertedID.(primitive.ObjectID); !ok {
+	id, ok := res.InsertedID.(primitive.ObjectID)
+	if !ok {
 		m.logger.Error("failed to parse objId", zap.Error(err))
 		m.logger.Debug("")
 		return "", err
-	} else {
-		m.logger.Info("insertOne success", zap.String("id", id.Hex()))
-		return id.Hex(), nil
 	}
+
+	m.logger.Info("insertOne success", zap.String("id", id.Hex()))
+	return id.Hex(), nil
 
 }
 

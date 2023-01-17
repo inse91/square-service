@@ -1,9 +1,9 @@
-GET http://localhost:8080/task/example
+GET http://localhost:{{port}}/task/example
 #Content-Type: application/json
 Accept: application/json
 
 ###
-GET http://localhost:8080/tasks
+GET http://localhost:{{port}}/tasks
 #Content-Type: application/json
 Accept: text/plain
 
@@ -21,15 +21,39 @@ client.test("request", t1);
 %}
 
 ###
-GET http://localhost:8080/{{name}}
+GET http://localhost:{{port}}/task/63b41c5ff51e6b13b23b643a
+#Content-Type: application/json
+Accept: application/json
+
+###
+DELETE http://localhost:{{port}}/task/63b41c5ff51e6b13b23b643b
+#Content-Type: application/json
 Accept: text/plain
 
 ###
-POST http://localhost:8080/task
+GET http://localhost:{{port}}/{{name}}
+Accept: text/plain
+
+###
+POST http://localhost:{{port}}/task
 Content-Type: application/json
 
 {
-  "key" : "value",
-  "list": [1, 2, 3, "123"]
+  "description": "test description123",
+  "tags": null,
+  "priority": "low"
 }
+
+###
+PUT http://localhost:{{port}}/task
+Content-Type: application/json
+
+
+{
+  "id": "6397ff14f6aa567f54d1bf35",
+  "description": "updated task",
+  "priority": "low",
+  "tags": ["example", "plus"]
+}
+
 

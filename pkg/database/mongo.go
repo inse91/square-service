@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"square-service/internal/config"
 )
 
-const (
-	mongoDbUrl string = "mongodb://localhost:4001"
-)
+// func NewMongoClient(ctx context.Context, host, port, database string) (db *mongo.Database, err error) {
 
-func NewMongoClient(ctx context.Context, host, port, database string) (db *mongo.Database, err error) {
+func NewMongoClient(ctx context.Context, cfg config.MongoDB) (db *mongo.Database, err error) {
 
 	//url := fmt.Sprintf("mongodb://%s:%s@%s:%s", login, password, host, port)
-	url := fmt.Sprintf("mongodb://%s:%s", host, port)
+	url := fmt.Sprintf("mongodb://%s:%s", cfg.Host, cfg.Password)
 	clientOpts := options.Client().ApplyURI(url)
 
 	client, err := mongo.Connect(ctx, clientOpts)
@@ -27,6 +26,6 @@ func NewMongoClient(ctx context.Context, host, port, database string) (db *mongo
 		return nil, fmt.Errorf(`error while trying to ping db: %v`, err)
 	}
 
-	db = client.Database(database)
+	db = client.Database(cfg.DataBase)
 	return
 }

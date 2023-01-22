@@ -22,35 +22,21 @@ func main() {
 	logger := logging.GetLogger()
 	cfg, err := config.GetConfig()
 	if err != nil {
-		logger.Fatal("error while loading config", zap.Error(err))
+		logger.Fatal("failed loading config", zap.Error(err))
 	}
 
 	ctx := context.Background()
-	mongoDB, err := database.NewMongoClient(ctx, cfg.MongoDB.Host, cfg.MongoDB.Port, cfg.MongoDB.DataBase)
+
+	pgClient, err := database.NewPostgresClient(ctx, cfg.PostgresDB)
 	if err != nil {
 		logger.Fatal("", zap.Error(err))
 		return
 	}
 
-	storage := task.NewStorage(mongoDB, cfg.MongoDB.Collection, logger)
+	taskStorage := task.NewPostgresTaskStorage(pgClient, logger)
 
 	router.Use(
-		//mw.BasicAuth(func(s1 string, s2 string, ctx echo.Context) (bool, error) {
-		//	return true, nil
-		//}),
-		//mw.LoggerWithConfig(mw.LoggerConfig{
-		//	Skipper:          nil,
-		//	Format:           "",
-		//	CustomTimeFormat: "",
-		//	Output:           nil,
-		//}),
-		//mw.TimeoutWithConfig(mw.TimeoutConfig{
-		//	Skipper:                    nil,
-		//	ErrorMessage:               "",
-		//	OnTimeoutRouteErrorHandler: nil,
-		//	Timeout:                    1 * time.Second,
-		//}),
-		//mw.Recover(),
+		mw.Recover(),
 		mw.RequestLoggerWithConfig(mw.RequestLoggerConfig{
 			LogURI:    true,
 			LogStatus: true,
@@ -66,7 +52,7 @@ func main() {
 		}),
 	)
 
-	service := task.NewService(storage, logger)
+	service := task.NewService(taskStorage, logger)
 
 	handler := task.NewHandler(service, logger)
 	handler.Register(router)

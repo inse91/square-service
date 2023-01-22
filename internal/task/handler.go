@@ -1,7 +1,6 @@
 package task
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -23,8 +22,6 @@ const (
 type handler struct {
 	logger  *logging.Logger
 	service *service
-	//storage Storage
-	ctx context.Context
 }
 
 func NewHandler(service *service, logger *logging.Logger) handlers.Handler {

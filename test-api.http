@@ -5,20 +5,8 @@ Accept: application/json
 ###
 GET http://localhost:{{port}}/tasks
 #Content-Type: application/json
-Accept: text/plain
+Accept: application/json
 
-> {%
-function t1() {
-
-    // client.assert(
-      // response.status === 200,
-      // String(response.status)
-      //      .concat(" is not 200")
-  // )
-}
-
-client.test("request", t1);
-%}
 
 ###
 GET http://localhost:{{port}}/task/63b41c5ff51e6b13b23b643a
@@ -39,8 +27,8 @@ POST http://localhost:{{port}}/task
 Content-Type: application/json
 
 {
-  "description": "test description123",
-  "tags": null,
+  "description": "test description111",
+  "tags": ["from", "to"],
   "priority": "low"
 }
 

@@ -1,32 +1,42 @@
 package logging
 
 import (
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"os"
-	"sync"
 )
 
-var once sync.Once
-var log *zap.Logger
-
-type Logger struct {
+type zapLogger struct {
 	*zap.Logger
 }
 
-func GetLogger() *Logger {
+func (z zapLogger) Infof(s string, v ...any) {
+	//TODO implement me
+	panic("implement me")
+}
 
-	once.Do(func() {
-		log, _ = zap.NewProduction(
-			zap.ErrorOutput(os.Stdout),
-			//zap.ErrorOutput(someFile),
-			zap.Development(),
-			zap.AddCaller(),
-			zap.AddStacktrace(zap.InfoLevel),
-		)
-	})
+func (z zapLogger) Errorf(s string, v ...any) {
+	//TODO implement me
+	panic("implement me")
+}
 
-	return &Logger{
-		log,
+func GetLogger() (*zapLogger, error) {
+
+	log, err := zap.NewProduction(
+		zap.ErrorOutput(os.Stdout),
+		zap.ErrorOutput(os.Stderr),
+		zap.Development(),
+		zap.AddCaller(),
+		zap.AddStacktrace(zap.InfoLevel),
+		zap.AddStacktrace(zap.ErrorLevel),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get Logger")
 	}
+
+	l := &zapLogger{log}
+
+	log.Info("logger got successfully")
+	return l, nil
 
 }

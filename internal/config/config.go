@@ -3,6 +3,7 @@ package config
 import (
 	c "github.com/golobby/config/v3"
 	"github.com/golobby/config/v3/pkg/feeder"
+	"github.com/pkg/errors"
 )
 
 type MongoDB struct {
@@ -39,7 +40,7 @@ func GetConfig() (*config, error) {
 		AddStruct(cfg)
 
 	if err := conf.Feed(); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to parse 'config.yaml' file")
 	}
 
 	return cfg, nil

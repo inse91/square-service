@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
+	errs "github.com/pkg/errors"
 	"net/http"
 	handlers "square-service/internal/handlers"
 	"square-service/pkg/logging"
@@ -20,11 +21,11 @@ const (
 )
 
 type handler struct {
-	logger  *logging.Logger
+	logger  logging.Logger
 	service *service
 }
 
-func NewHandler(service *service, logger *logging.Logger) handlers.Handler {
+func NewHandler(service *service, logger logging.Logger) handlers.Handler {
 	return &handler{
 		service: service,
 		logger:  logger,
@@ -40,9 +41,61 @@ func (h *handler) Register(r *echo.Echo) {
 	r.PUT(taskUpdateOneURL, h.UpdateTask)
 }
 
+func (h *handler) CreateTask(ctx echo.Context) error {
+
+	h.logger.Infof("creating new task")
+
+	var dto *CreateTaskDTO = nil
+	d := json.NewDecoder(ctx.Request().Body)
+	err := d.Decode(&dto)
+	if err != nil {
+		h.logger.Errorf("failed decoding json body: %s", err.Error())
+		_ = ctx.String(http.StatusBadRequest, "failed decoding json body")
+		return errs.Wrap(err, "failed decoding json body")
+	}
+
+	id, err := h.service.Create(ctx.Request().Context(), dto)
+	if err != nil {
+		h.logger.Errorf("failed decoding json body: %s", err.Error())
+		_ = ctx.String(http.StatusInternalServerError, "failed creating task")
+		return errs.Wrap(err, "failed decoding json body")
+	}
+
+	err = ctx.String(http.StatusCreated, fmt.Sprintf("task created with id: %s", id))
+	if err != nil {
+		h.logger.Errorf("failed writing to response: %s", err.Error())
+		return errs.Wrap(err, "failed writing to response")
+	}
+
+	h.logger.Infof("task created with id: %s", id)
+	return nil
+
+}
+
+func (h *handler) GetTaskList(ctx echo.Context) error {
+
+	tasks, err := h.service.GetAll(ctx.Request().Context())
+	if err != nil {
+		h.logger.Errorf("failed getting tasks: %s", err.Error())
+		_ = ctx.String(http.StatusInternalServerError, "failed getting tasks")
+		return errs.Wrap(err, "failed getting tasks")
+	}
+
+	err = ctx.JSON(http.StatusOK, tasks)
+	if err != nil {
+		h.logger.Errorf("failed writing to response: %s", err.Error())
+		return errs.Wrap(err, "failed writing to response")
+	}
+
+	return nil
+
+}
+
+// TODO - proper logging and errors handling below ⬇⬇⬇
+
 func (h *handler) UpdateTask(ctx echo.Context) error {
 
-	h.logger.Info("updating task")
+	h.logger.Infof("updating task")
 
 	var task *Task = nil
 	d := json.NewDecoder(ctx.Request().Body)
@@ -56,10 +109,7 @@ func (h *handler) UpdateTask(ctx echo.Context) error {
 
 	err = h.service.UpdateOne(ctx.Request().Context(), task)
 	if err != nil {
-		if err := ctx.String(http.StatusInternalServerError, "failed updating task"); err != nil {
-			return err
-		}
-		return err
+		return ctx.String(http.StatusInternalServerError, "failed updating task"+err.Error())
 	}
 
 	err = ctx.String(http.StatusAccepted, "task updated")
@@ -73,7 +123,7 @@ func (h *handler) UpdateTask(ctx echo.Context) error {
 
 func (h *handler) DeleteTaskById(ctx echo.Context) error {
 
-	h.logger.Info("deleting task by id")
+	h.logger.Infof("deleting task by id")
 	id := ctx.Param("id")
 	if id == "" {
 		err := ctx.String(http.StatusBadRequest, "no id provided")
@@ -95,14 +145,13 @@ func (h *handler) DeleteTaskById(ctx echo.Context) error {
 	}
 
 	err = ctx.String(http.StatusOK, "deleted successfully")
-
-	return nil
+	return err
 }
 
 func (h *handler) GetTaskById(ctx echo.Context) error {
 
-	h.logger.Info("Getting task by id")
 	id := ctx.Param("id")
+	h.logger.Infof("Getting task by id: %s", id)
 	if id == "" {
 		err := ctx.String(
 			http.StatusBadRequest,
@@ -125,56 +174,15 @@ func (h *handler) GetTaskById(ctx echo.Context) error {
 
 	err = ctx.JSON(http.StatusOK, task)
 	if err != nil {
-		err = ctx.String(
+		_ = ctx.String(
 			http.StatusInternalServerError,
-			fmt.Sprintf(""), // todo - message??
+			fmt.Sprintf("failed"), // todo - message??
 		)
-		return err
+		h.logger.Infof("failed serializing task: %v", task)
+		return errs.Wrap(err, "failed serializing task")
 	}
 
-	return nil
-
-}
-
-func (h *handler) CreateTask(ctx echo.Context) error {
-
-	h.logger.Info("creating new task")
-
-	var dto *CreateTaskDTO = nil
-	d := json.NewDecoder(ctx.Request().Body)
-	err := d.Decode(&dto)
-	if err != nil {
-		if err := ctx.String(http.StatusBadRequest, "wrong json"); err != nil {
-			return err
-		}
-		return err
-	}
-
-	id, err := h.service.Create(ctx.Request().Context(), dto)
-	if err != nil {
-		if err := ctx.String(http.StatusInternalServerError, "failed creating task"); err != nil {
-			return err
-		}
-		return err
-	}
-
-	return ctx.String(http.StatusCreated, fmt.Sprintf("Task created with id: %s", id))
-
-}
-
-func (h *handler) GetTaskList(ctx echo.Context) error {
-
-	tasks, err := h.service.GetAll(ctx.Request().Context())
-	if err != nil {
-		return err
-	}
-
-	err = ctx.JSON(http.StatusOK, tasks)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 
 }
 
@@ -182,7 +190,8 @@ func (h *handler) GetTaskExample(ctx echo.Context) error {
 
 	err := ctx.JSON(http.StatusOK, GetExampleTask())
 	if err != nil {
-		return err
+		_ = ctx.String(http.StatusInternalServerError, "failed sending example")
+		return errs.Wrap(err, "failed sending example")
 	}
 
 	return nil

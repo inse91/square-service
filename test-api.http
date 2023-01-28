@@ -2,7 +2,17 @@ GET http://localhost:{{port}}/task/example
 #Content-Type: application/json
 Accept: application/json
 
-###
+### save task
+POST http://localhost:{{port}}/task
+Content-Type: application/json
+
+{
+  "description": "test description111",
+  "tags": ["from", "to"],
+  "priority": "low"
+}
+
+### get all tasks
 GET http://localhost:{{port}}/tasks
 #Content-Type: application/json
 Accept: application/json
@@ -21,16 +31,6 @@ Accept: text/plain
 ###
 GET http://localhost:{{port}}/{{name}}
 Accept: text/plain
-
-###
-POST http://localhost:{{port}}/task
-Content-Type: application/json
-
-{
-  "description": "test description111",
-  "tags": ["from", "to"],
-  "priority": "low"
-}
 
 ###
 PUT http://localhost:{{port}}/task

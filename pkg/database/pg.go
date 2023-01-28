@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v5"
+	"github.com/pkg/errors"
 	"square-service/internal/config"
 )
 
@@ -15,12 +16,16 @@ func NewPostgresClient(ctx context.Context, cfg config.PostgresDB) (*pgx.Conn, e
 
 	conn, err := pgx.Connect(ctx, connectionString)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err,
+			fmt.Sprintf(
+				"failed to set connection to postgres with connection string: %s",
+				connectionString,
+			))
 	}
 
 	err = conn.Ping(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to ping postgres")
 	}
 
 	return conn, nil
